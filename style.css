@@ -1,0 +1,41 @@
+.grille
+    {
+
+    }
+.tuile
+    {
+      background-color: white;
+      border: 1px black solid;
+      display: block;
+      width: 50px;
+      height: 50px;
+      position: absolute;
+    }
+.obstacle
+    {
+      background-color: grey;
+    }
+#joueur1
+    {
+      background-color: blue;
+    }
+#joueur2
+    {
+      background-color: red;
+    }
+#arme1
+    {
+      background-color: black;
+    }
+#arme2
+    {
+    background-color: crimson;
+    }
+#arme3
+    {
+    background-color: pink;
+    }
+#arme4
+    {
+      background-color: orange;
+    }
