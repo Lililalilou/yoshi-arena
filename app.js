@@ -16,8 +16,8 @@ $(function() {
       this.id = id;
       return this;
     },
-    attribuerCase: function(pos) {
-      this.case = pos;
+    attribuerCase: function(element) {
+      this.case = element;
       this.case.attribuerJoueur(this);
     },
     obtenirSelection: function() {
@@ -54,10 +54,13 @@ $(function() {
     ],
     init: function() {
       this.typeId = Math.floor(Math.random() * this.types.length);
-      return this;
     },
     obtenirSelection: function() {
       return this.types[this.typeId];
+    },
+    attribuerCase: function(element) {
+      this.case = element;
+      this.case.attribuerArme(this);
     },
     obtenirNom: function() {
       return this.obtenirSelection().nom;
@@ -97,11 +100,9 @@ $(function() {
       this.isJoueur = true;
       this.htmlCell.className += ` ${joueur.obtenirVisuel()}`;
     },
-    attribuerArme: function () {
+    attribuerArme: function(arme) {
       this.isArme = true;
-      this.arme = Object.create(Arme);
-      this.arme.init().obtenirSelection();
-      this.htmlCell.className += ` ${this.arme.obtenirVisuel()}`;
+      this.htmlCell.className += ` ${arme.obtenirVisuel()}`;
     }
   }
 
@@ -160,7 +161,9 @@ $(function() {
     genererArmes: function() {
       var random = Math.ceil((Math.random() * 4) - 1);
       for (let i = 0; i <= random ; i += 1) {
-        this.obtenirCaseAleatoire().attribuerArme();
+        var arme = Object.create(Arme);
+        arme.init();
+        arme.attribuerCase(this.obtenirCaseAleatoire());
       }
     },
     genererJoueurs: function(nombre) {
