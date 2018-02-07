@@ -20,13 +20,16 @@ $(function() {
       this.case = element;
       this.case.attribuerJoueur(this);
     },
+    desattribuerCase: function(element) {
+      this.case = element;
+      this.case.supprimerJoueur(this);
+    },
     obtenirSelection: function() {
         return this.joueurs[this.id]; // retour de {x nom et x visuel}
     },
     obtenirVisuel: function() {
       return this.obtenirSelection().visuel;
     },
-    deplacer: function() {}
   }
 
   var Arme = {
@@ -75,8 +78,10 @@ $(function() {
 
   var Tuile = {
     init: function(x, y) {
-      this.posX = `${x * 50}px`;
-      this.posY = `${y * 50}px`;
+      this.x = x;
+      this.y = y;
+      this.posX = `${this.x * 50}px`;
+      this.posY = `${this.y * 50}px`;
       this.isObstacle = false;
       this.isJoueur = false;
       this.isArme = false;
@@ -99,6 +104,10 @@ $(function() {
     attribuerJoueur: function(joueur) {
       this.isJoueur = true;
       this.htmlCell.className += ` ${joueur.obtenirVisuel()}`;
+    },
+    supprimerJoueur: function(joueur) {
+      this.isJoueur = false;
+      $(this.htmlCell).removeClass(` ${joueur.obtenirVisuel()}`);
     },
     attribuerArme: function(arme) {
       this.isArme = true;
@@ -172,6 +181,10 @@ $(function() {
         var joueur = Object.create(Joueur);
         joueur.init(i);
         joueur.attribuerCase(this.obtenirCaseAleatoire(true));
+
+        console.log(joueur.case);
+        this.joueurs.push(joueur); // tableau dans init grille
+        console.log(this.joueurs);
       }
     }
   }
@@ -182,4 +195,5 @@ $(function() {
   grille.genererObstacles(10);
   grille.genererArmes();
   grille.genererJoueurs(2);
+  grille.joueurs[0].desattribuerCase(grille.joueurs[0].case);
 });
