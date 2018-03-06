@@ -13,51 +13,90 @@ $(function() {
     init: function(id, grille) {
       this.sante = 100;
       this.force = 10;
-      this.arme = arme;
       this.id = id;
       this.grille = grille;
+      this.arme = null;
       return this;
+    },
+    attribuerArme: function(arme) {
+      this.arme = arme;
     },
     attribuerCase: function(element) {
       this.case = element;
       this.case.attribuerJoueur(this);
     },
-    deplacerDroite: function(element) {
+    deplacerDroite: function(element, grille) {
       this.case = element;
       var nextCase = null;
       if (this.grille.ifExiste(this.case.x + 1, this.case.y)) {
         nextCase = this.grille.map[this.case.x + 1][this.case.y];
-        console.log(nextCase);
         if (nextCase.deplacementOk()) {
           this.case.supprimerJoueur(this);
           this.case = nextCase;
           this.case.attribuerJoueur(this);
-        
+          //si arme sur la case => échange armes
+          //var loot = this.grille.obtenirArme(this.case.x, this.case.y);
+          if (this.case.arme) {
+            console.log("Le joueur prend l'arme");
+            this.arme = this.case.echangerArme(this.arme);
+            console.log(this);
+          }
+          //si case adj = joueur => combat
+          var adversaire = this.grille.obtenirJoueurAdj(this.case.x, this.case.y);
+          if (adversaire) {
+            this.combattre();
+          } else {
+            console.log("Pas de combat");
+          }
         } else {
           console.log('Déplacement impossible');
         }
       }
     },
-    deplacerGauche: function(element) {
+    deplacerGauche: function(element, grille) {
       this.case = element;
-      this.case.supprimerJoueur(this);
-      var nextCase = this.grille.map[this.case.x - 1][this.case.y];
-      this.case = nextCase;
-      this.case.attribuerJoueur(this);
+      var nextCase = null;
+      if (this.grille.ifExiste(this.case.x - 1, this.case.y)) {
+        nextCase = this.grille.map[this.case.x - 1][this.case.y];
+        if (nextCase.deplacementOk()) {
+          this.case.supprimerJoueur(this);
+          this.case = nextCase;
+          this.case.attribuerJoueur(this);
+        } else {
+          console.log('Déplacement impossible');
+        }
+      }
     },
-    deplacerBas: function(element) {
+    deplacerBas: function(element, grille) {
       this.case = element;
-      this.case.supprimerJoueur(this);
-      var nextCase = this.grille.map[this.case.x][this.case.y + 1];
-      this.case = nextCase;
-      this.case.attribuerJoueur(this);
+      var nextCase = null;
+      if (this.grille.ifExiste(this.case.x, this.case.y + 1)) {
+        nextCase = this.grille.map[this.case.x][this.case.y + 1];
+        if (nextCase.deplacementOk()) {
+          this.case.supprimerJoueur(this);
+          this.case = nextCase;
+          this.case.attribuerJoueur(this);
+        } else {
+          console.log('Déplacement impossible');
+        }
+      }
     },
-    deplacerHaut: function(element) {
+    deplacerHaut: function(element, grille) {
       this.case = element;
-      this.case.supprimerJoueur(this);
-      var nextCase = this.grille.map[this.case.x][this.case.y - 1];
-      this.case = nextCase;
-      this.case.attribuerJoueur(this);
+      var nextCase = null;
+      if (this.grille.ifExiste(this.case.x, this.case.y - 1)) {
+        nextCase = this.grille.map[this.case.x][this.case.y - 1];
+        if (nextCase.deplacementOk()) {
+          this.case.supprimerJoueur(this);
+          this.case = nextCase;
+          this.case.attribuerJoueur(this);
+        } else {
+          console.log('Déplacement impossible');
+        }
+      }
+    },
+    combattre: function() {
+      console.log("Combat");
     },
     obtenirSelection: function() {
         return this.joueurs[this.id]; // retour de {x nom et x visuel}
@@ -95,8 +134,12 @@ $(function() {
         degats: 50
       }
     ],
-    init: function() {
-      this.typeId = Math.floor(Math.random() * this.types.length);
+    init: function(typeId) {
+      if (typeId === 0) {
+        this.typeId = typeId;
+      } else {
+        this.typeId = Math.floor(Math.random() * (this.types.length - 1)) + 1;
+      }
     },
     obtenirSelection: function() {
       return this.types[this.typeId];
@@ -123,8 +166,8 @@ $(function() {
       this.posX = `${this.x * 50}px`;
       this.posY = `${this.y * 50}px`;
       this.isObstacle = false;
-      this.isJoueur = false;
-      this.isArme = false;
+      this.joueur = null;
+      this.arme = null;
       return this;
     },
     creer: function() {
@@ -135,30 +178,34 @@ $(function() {
       this.htmlCell.style.left = this.posX;
     },
     checkLibre: function() {
-       return !this.isObstacle && !this.isJoueur && !this.isArme;
+       return !this.isObstacle && !this.joueur && !this.arme;
     },
     deplacementOk: function() {
-       return !this.isObstacle && !this.isJoueur;
+       return !this.isObstacle && !this.joueur;
     },
     rendreBloquant: function() {
       this.htmlCell.className += ' obstacle';
       this.isObstacle = true;
     },
     attribuerJoueur: function(joueur) {
-      this.isJoueur = true;
-      this.htmlCell.className += ` ${joueur.obtenirVisuel()}`;
+      this.joueur = joueur;
+      $(this.htmlCell).addClass(this.joueur.obtenirVisuel());
     },
-    supprimerJoueur: function(joueur) {
-      this.isJoueur = false;
-      $(this.htmlCell).removeClass(` ${joueur.obtenirVisuel()}`);
+    supprimerJoueur: function() {
+      $(this.htmlCell).removeClass(this.joueur.obtenirVisuel());
+      this.joueur = null;
     },
     attribuerArme: function(arme) {
-      this.isArme = true;
-      this.htmlCell.className += ` ${arme.obtenirVisuel()}`;
+      this.arme = arme;
+      $(this.htmlCell).addClass(this.arme.obtenirVisuel());
     },
-    supprimerArme: function(arme) {
-      this.isArme = false;
-      $(this.htmlCell).removeClass(` ${arme.obtenirVisuel()}`);
+    echangerArme: function(arme) {
+      console.log("Echange arme");
+      var armeActuelle = this.arme; // arme sur la case
+      $(this.htmlCell).removeClass(armeActuelle.obtenirVisuel());//visuel absent
+      $(this.htmlCell).addClass(this.joueur.arme.obtenirVisuel());//visuel de case devient celui de l'arme du J
+      this.arme = arme;//attribut de l'arme lootée devient arme du joueur
+      return armeActuelle;
     }
   }
 
@@ -174,7 +221,7 @@ $(function() {
     afficher: function() {
       this.htmlGrid = document.createElement('div');
       this.htmlGrid.setAttribute('class', 'grille');
-      $('body').append(this.htmlGrid);
+      $('section').append(this.htmlGrid);
     },
     genererMap: function() {
       for (let x = 0; x < this.largeur; x += 1) {
@@ -189,23 +236,48 @@ $(function() {
       }
     },
     ifExiste: function(x, y) {
-      if (x > 0 && y > 0 && x < this.largeur && y < this.hauteur) {
+      if (x >= 0 && y >= 0 && x < this.largeur && y < this.hauteur) {
         return true;
+      }
+      return false;
+    },
+    obtenirCaseDispo: function(x, y) {
+      if (this.ifExiste(x, y)) {
+        return this.map[x][y];
+      }
+      return null;
+    },
+    obtenirJoueurAdj: function(x, y) {
+      if (this.obtenirCaseDispo(x + 1, y) && this.obtenirCaseDispo(x + 1, y).joueur) {
+        return this.obtenirCaseDispo(x + 1, y).joueur;
+      }
+      if (this.obtenirCaseDispo(x - 1, y) && this.obtenirCaseDispo(x - 1, y).joueur) {
+        return this.obtenirCaseDispo(x - 1, y).joueur;
+      }
+      if (this.obtenirCaseDispo(x, y + 1) && this.obtenirCaseDispo(x, y + 1).joueur) {
+        return this.obtenirCaseDispo(x, y + 1).joueur;
+      }
+      if (this.obtenirCaseDispo(x, y - 1) && this.obtenirCaseDispo(x, y - 1).joueur) {
+        return this.obtenirCaseDispo(x, y - 1).joueur;
+      }
+      return null;
+    },
+    obtenirArme: function(x, y) {
+      if (this.obtenirCaseDispo(x, y).arme) {
+        return this.obtenirCaseDispo(x, y).arme;
       }
     },
     obtenirCaseAleatoire: function(typeJoueur) {
-      console.log('obtenirCaseAleatoire');
       var randomX = Math.floor(Math.random() * this.largeur);
       var randomY = Math.floor(Math.random() * this.hauteur);
       var random = this.map[randomX][randomY];
       if (random.checkLibre()) {
         if (typeJoueur) {//si joueur, on vérifie que les cases adjacentes ne sont pas occupées par un joueur
-          console.log(randomX,randomY);
           if (
-            (this.map[randomX + 1] ? !this.map[randomX + 1][randomY].isJoueur : true)
-            && (this.map[randomX - 1] ? !this.map[randomX - 1][randomY].isJoueur : true)
-            && (this.map[randomX][randomY + 1] ? !this.map[randomX][randomY + 1].isJoueur : true)
-            && (this.map[randomX][randomY - 1] ? !this.map[randomX][randomY - 1].isJoueur : true)
+            (this.map[randomX + 1] ? !this.map[randomX + 1][randomY].joueur : true)
+            && (this.map[randomX - 1] ? !this.map[randomX - 1][randomY].joueur : true)
+            && (this.map[randomX][randomY + 1] ? !this.map[randomX][randomY + 1].joueur : true)
+            && (this.map[randomX][randomY - 1] ? !this.map[randomX][randomY - 1].joueur : true)
           ) {
             return random;
           }
@@ -231,14 +303,14 @@ $(function() {
     },
     genererJoueurs: function(nombre) {
       for (let i = 0; i < nombre; i += 1) {
-        console.log(`Joueur ${i}`)
         var joueur = Object.create(Joueur);
         joueur.init(i, this);
         joueur.attribuerCase(this.obtenirCaseAleatoire(true));
-
-        console.log(joueur.case);
         this.joueurs.push(joueur); // tableau dans init grille
-        console.log(this.joueurs);
+        var arme = Object.create(Arme);
+        arme.init(0);
+        joueur.attribuerArme(arme);
+        console.log(arme);
       }
     }
   }
@@ -248,6 +320,32 @@ $(function() {
   grille.genererMap();
   grille.genererObstacles(10);
   grille.genererArmes();
-  grille.genererJoueurs(1);
-  grille.joueurs[0].deplacerDroite(grille.joueurs[0].case);
+  grille.genererJoueurs(2);
+  //grille.joueurs[0].deplacerDroite(grille.joueurs[0].case);
+
+  // Gestion du clavier
+  window.onkeydown = function(event) {
+    var e = event || window.event;
+    var key = e.which || e.keyCode;
+    switch(key) {
+  	case 38 : case 122 : case 119 : case 90 : case 87 : // Flèche haut, z, w, Z, W
+  		grille.joueurs[0].deplacerHaut(grille.joueurs[0].case);
+  		break;
+  	case 40 : case 115 : case 83 : // Flèche bas, s, S
+  		grille.joueurs[0].deplacerBas(grille.joueurs[0].case);
+  		break;
+  	case 37 : case 113 : case 97 : case 81 : case 65 : // Flèche gauche, q, a, Q, A
+  		grille.joueurs[0].deplacerGauche(grille.joueurs[0].case);
+  		break;
+  	case 39 : case 100 : case 68 : // Flèche droite, d, D
+  		grille.joueurs[0].deplacerDroite(grille.joueurs[0].case);
+  		break;
+  	default :
+  		// Si la touche ne nous sert pas, nous n'avons aucune raison de bloquer son comportement normal.
+  		return true;
+  }
+
+
+  }
+
 });

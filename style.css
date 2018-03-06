@@ -1,3 +1,14 @@
+body
+  {
+    width: 100%;
+    height: auto;
+  }
+
+aside
+  {
+    margin-top: 550px;
+  }
+
 .grille
     {
 
@@ -15,27 +26,31 @@
     {
       background-color: grey;
     }
-#joueur1
+.joueur1
     {
       background-color: blue;
     }
-#joueur2
+.joueur2
     {
       background-color: red;
     }
-#arme1
+.arme0
+    {
+      background-color: green;
+    }
+.arme1
     {
       background-color: black;
     }
-#arme2
+.arme2
     {
     background-color: crimson;
     }
-#arme3
+.arme3
     {
     background-color: pink;
     }
-#arme4
+.arme4
     {
       background-color: orange;
     }
