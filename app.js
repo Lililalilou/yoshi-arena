@@ -18,6 +18,12 @@ $(function() {
       this.arme = null;
       return this;
     },
+    obtenirSelection: function() {
+        return this.joueurs[this.id]; // retour de {x nom et x visuel}
+    },
+    obtenirVisuel: function() {
+      return this.obtenirSelection().visuel;
+    },
     attribuerArme: function(arme) {
       this.arme = arme;
     },
@@ -25,85 +31,55 @@ $(function() {
       this.case = element;
       this.case.attribuerJoueur(this);
     },
-    deplacerDroite: function(element, grille) {
-      this.case = element;
+    deplacerDroite: function() {
+      this.deplacer(this.case.x + 1, this.case.y);
+    },
+    deplacerGauche: function() {
+      this.deplacer(this.case.x - 1, this.case.y);
+    },
+    deplacerBas: function() {
+      this.deplacer(this.case.x, this.case.y + 1);
+    },
+    deplacerHaut: function() {
+      this.deplacer(this.case.x, this.case.y - 1);
+    },
+    deplacer: function(x, y) {
       var nextCase = null;
-      if (this.grille.ifExiste(this.case.x + 1, this.case.y)) {
-        nextCase = this.grille.map[this.case.x + 1][this.case.y];
+      if (this.grille.ifExiste(x, y)) {
+        nextCase = this.grille.map[x][y];
         if (nextCase.deplacementOk()) {
           this.case.supprimerJoueur(this);
           this.case = nextCase;
           this.case.attribuerJoueur(this);
           //si arme sur la case => échange armes
           //var loot = this.grille.obtenirArme(this.case.x, this.case.y);
-          if (this.case.arme) {
-            console.log("Le joueur prend l'arme");
-            this.arme = this.case.echangerArme(this.arme);
-            console.log(this);
-          }
+          this.prendreArme();
           //si case adj = joueur => combat
-          var adversaire = this.grille.obtenirJoueurAdj(this.case.x, this.case.y);
-          if (adversaire) {
-            this.combattre();
-          } else {
-            console.log("Pas de combat");
-          }
+          this.attaquer();
         } else {
           console.log('Déplacement impossible');
         }
       }
     },
-    deplacerGauche: function(element, grille) {
-      this.case = element;
-      var nextCase = null;
-      if (this.grille.ifExiste(this.case.x - 1, this.case.y)) {
-        nextCase = this.grille.map[this.case.x - 1][this.case.y];
-        if (nextCase.deplacementOk()) {
-          this.case.supprimerJoueur(this);
-          this.case = nextCase;
-          this.case.attribuerJoueur(this);
-        } else {
-          console.log('Déplacement impossible');
-        }
+    prendreArme: function() {
+      if (this.case.arme) {
+        console.log("Le joueur prend l'arme");
+        this.arme = this.case.echangerArme(this.arme);
+        console.log(this);
       }
     },
-    deplacerBas: function(element, grille) {
-      this.case = element;
-      var nextCase = null;
-      if (this.grille.ifExiste(this.case.x, this.case.y + 1)) {
-        nextCase = this.grille.map[this.case.x][this.case.y + 1];
-        if (nextCase.deplacementOk()) {
-          this.case.supprimerJoueur(this);
-          this.case = nextCase;
-          this.case.attribuerJoueur(this);
-        } else {
-          console.log('Déplacement impossible');
-        }
+    attaquer: function() {
+      var adversaire = this.grille.obtenirJoueurAdj(this.case.x, this.case.y);
+      var degats = this.arme.obtenirDegats();
+      if (adversaire) {
+        // Si adversaire a attaqué au tour précédent (pas en mode défense)
+        console.log("Le joueur inflige " + degats + " points de dégâts.");
+        adversaire.sante -= degats;
+        console.log("Il reste " + adversaire.sante + " points de vie à l'adversaire.");
+      } else {
+        console.log("Pas de combat");
       }
-    },
-    deplacerHaut: function(element, grille) {
-      this.case = element;
-      var nextCase = null;
-      if (this.grille.ifExiste(this.case.x, this.case.y - 1)) {
-        nextCase = this.grille.map[this.case.x][this.case.y - 1];
-        if (nextCase.deplacementOk()) {
-          this.case.supprimerJoueur(this);
-          this.case = nextCase;
-          this.case.attribuerJoueur(this);
-        } else {
-          console.log('Déplacement impossible');
-        }
-      }
-    },
-    combattre: function() {
-      console.log("Combat");
-    },
-    obtenirSelection: function() {
-        return this.joueurs[this.id]; // retour de {x nom et x visuel}
-    },
-    obtenirVisuel: function() {
-      return this.obtenirSelection().visuel;
-    },
+    }
   }
 
   var Arme = {
